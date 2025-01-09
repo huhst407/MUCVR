@@ -4,12 +4,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class NetworkManager : MonoBehaviour
+public class CENetworkManager : MonoBehaviour
 {
-    public static NetworkManager instance;
+    public static CENetworkManager instance;
     public KcpClient client;
     public Camera camm;
     public Cubemap cubemap;
+    public int width = 1024;
+
     private void Awake() {
         if (instance == null) {
             instance = this;

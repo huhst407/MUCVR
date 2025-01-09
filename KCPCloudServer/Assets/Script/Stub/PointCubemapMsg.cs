@@ -1,7 +1,8 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+[Serializable]
 public class PointCubemapMsg : MsgBase
 {
     public PointCubemapMsg() { protoName = "PointCubemapMsg"; }

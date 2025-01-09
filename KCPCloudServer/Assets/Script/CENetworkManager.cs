@@ -9,21 +9,19 @@ using UnityEngine;
 using System.Threading.Tasks;
 using System.Reflection;
 using System.Linq;
-public class TaskUnit{
-    public int connectionId;
-    public MsgBase msg;
-}
 
-public class NetworkManager : MonoBehaviour
-{
-    public static NetworkManager instance;
+
+public class CENetworkManager : MonoBehaviour {
+    public static CENetworkManager instance;
     public KcpServer server;
     MsgBase msg = new MsgBase();
     Camera camm;
-    Cubemap cubemap;
-    const int width = 1024;
-    Texture2D tex=new Texture2D(width,width);
+    Cubemap cubemap; 
+    public int width = 1024;
+    public Texture2D tex;
     Queue<TaskUnit> taskQueue = new Queue<TaskUnit>();
+
+
 
     private void Awake() {
         if (instance == null) {
@@ -34,11 +32,11 @@ public class NetworkManager : MonoBehaviour
         }
     }
     // Start is called before the first frame update
-    void Start()
-    {
+    void Start() {
+        tex = new Texture2D(width, width);
         camm = Camera.main;
         InitServer();
-       
+
     }
 
     // Update is called once per frame
@@ -49,8 +47,8 @@ public class NetworkManager : MonoBehaviour
             TaskUnit taskUnit = taskQueue.Dequeue();
             PosMsg msg = (PosMsg)taskUnit.msg;
             camm.transform.position = new Vector3(msg.x, msg.y, msg.z);
-            if(camm.RenderToCubemap(cubemap)) {
-                for(int i=0;i<6;i++) {
+            if (camm.RenderToCubemap(cubemap)) {
+                for (int i = 0; i < 6; i++) {
                     tex.SetPixels(cubemap.GetPixels((CubemapFace)i), 0);
                     tex.Apply();
                     byte[] bytes = tex.EncodeToJPG();
@@ -60,7 +58,7 @@ public class NetworkManager : MonoBehaviour
                     pointCubemapMsg.z = msg.z;
                     pointCubemapMsg.face = i;
                     pointCubemapMsg.jpg_bytes = bytes;
-
+                    Send(taskUnit.connectionId, pointCubemapMsg);
                 }
             }
         }
@@ -95,7 +93,7 @@ public class NetworkManager : MonoBehaviour
         // create server
         server = new KcpServer(
             (connectionId) => { },//连接时回调
-            (connectionId, message, channel) => RecallReceived(connectionId, message,channel),//接收到数据时回调
+            (connectionId, message, channel) => RecallReceived(connectionId, message, channel),//接收到数据时回调
             (connectionId) => { },//断开连接时回调
             (connectionId, error, reason) => Log.Info($"[KCP] OnServerError({connectionId}, {error}, {reason}"),
             config
@@ -103,7 +101,7 @@ public class NetworkManager : MonoBehaviour
 
         server.Start(7777);
     }
-    void RecallReceived(int connectionId,ArraySegment<byte> message,KcpChannel channel) {
+    void RecallReceived(int connectionId, ArraySegment<byte> message, KcpChannel channel) {
         Log.Info($"[KCP] OnServerDataReceived({connectionId},  message.Offset: {message.Offset},message.Count{message.Count}bitll{BitConverter.ToString(message.Array, message.Offset, message.Count)} @ {channel})");
         //if((message.Count - message.Offset) > sizeof(Int32)) return; 
         //if(BitConverter.ToInt32(message.Array, message.Offset) < message.Count - message.Offset)  return;
@@ -126,7 +124,8 @@ public class NetworkManager : MonoBehaviour
                 lock (taskQueue) {
                     taskQueue.Enqueue(taskUnit);
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 Log.Info($"connectionId:{connectionId},e.Message:{e.Message}");
             }
         }).Start();
@@ -136,24 +135,9 @@ public class NetworkManager : MonoBehaviour
         Int32 length = bytes_context.Length;
         byte[] length_bytes = BitConverter.GetBytes(length);
         byte[] bytes = length_bytes.Concat(bytes_context).ToArray();
-        server.Send(connectionId,new ArraySegment<byte>( bytes), KcpChannel.Reliable);
-        
+        server.Send(connectionId, new ArraySegment<byte>(bytes), KcpChannel.Reliable);
+
     }
-    //private void HandleMsg(int conn, MsgBase protoBase) {
 
-    //    string methodName = protoBase.GetName();
-    //    MethodInfo mm = Type.GetType("Handle").GetMethod(methodName);
-    //    if (mm == null) {
-    //        string str = "[警告]ConnHandleMsg没有处理连接方法 ";
-    //        Log.Info(str + methodName);
-    //        return;
-    //    }
-    //    Action<int, MsgBase> updateDel = (Action<int, MsgBase>)Delegate.CreateDelegate(typeof(Action<int, MsgBase>), null, mm);
-
-    //    updateDel(conn, protoBase);
-    //    Log.Info("[处理连接消息]" + conn + " :" + methodName);
-
-
-    //}
 }
 

@@ -1,7 +1,8 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+[Serializable]
 public class PosMsg : MsgBase
 {
     public PosMsg() { protoName = "PosMsg"; }
@@ -10,3 +11,7 @@ public class PosMsg : MsgBase
     public float z;
 }
 
+public class TaskUnit {
+    public int connectionId;
+    public MsgBase msg;
+}
