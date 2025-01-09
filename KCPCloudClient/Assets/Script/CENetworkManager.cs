@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 
 public class CENetworkManager : MonoBehaviour
@@ -11,7 +12,11 @@ public class CENetworkManager : MonoBehaviour
     public Camera camm;
     public Cubemap cubemap;
     public int width = 1024;
-
+    readonly static int MAX_MESSAGE_FIRE = 10;
+    static int msgCount = 0;
+    public MsgBase msg = new MsgBase();
+    public Queue<MsgBase> taskQueue = new Queue<MsgBase>();
+    static List<MsgBase> msgList = new List<MsgBase>();
     private void Awake() {
         if (instance == null) {
             instance = this;
@@ -33,6 +38,10 @@ public class CENetworkManager : MonoBehaviour
     void Update()
     {
         client.Tick();
+        MsgUpdate();
+
+
+
     }
     private void InitClient() {
         KcpConfig config = new KcpConfig(
@@ -70,23 +79,89 @@ public class CENetworkManager : MonoBehaviour
         ); 
     }
     public void OnClick() {
-        if (camm.RenderToCubemap(cubemap)) {
-            Texture2D tex = new Texture2D(1024, 1024, TextureFormat.RGB24, false);
-            for (int i = 0; i < 6; i++) {
-                
-                tex.SetPixels(cubemap.GetPixels((CubemapFace) i), 0);
-                tex.Apply();
-                byte[] bytes = tex.EncodeToJPG();
-                client.Send(new ArraySegment<byte>(bytes), KcpChannel.Reliable);
-               
-            }
-            Destroy(tex);
 
-        }
-        else {
-            Debug.Log("Failed to render cubemap");
-        }
-        //client.Send(new ArraySegment<byte>(System.Text.Encoding.UTF8.GetBytes("hello")), KcpChannel.Reliable);
+        //if (camm.RenderToCubemap(cubemap)) {
+        //    Texture2D tex = new Texture2D(1024, 1024, TextureFormat.RGB24, false);
+        //    for (int i = 0; i < 6; i++) {
+                
+        //        tex.SetPixels(cubemap.GetPixels((CubemapFace) i), 0);
+        //        tex.Apply();
+        //        byte[] bytes = tex.EncodeToJPG();
+        //        client.Send(new ArraySegment<byte>(bytes), KcpChannel.Reliable);
+               
+        //    }
+        //    Destroy(tex);
+
+        //}
+        //else {
+        //    Debug.Log("Failed to render cubemap");
+        //}
+        ////client.Send(new ArraySegment<byte>(System.Text.Encoding.UTF8.GetBytes("hello")), KcpChannel.Reliable);
     }
-    
+    void RecallReceived(int connectionId, ArraySegment<byte> message, KcpChannel channel) {
+        Log.Info($"[KCP] OnServerDataReceived({connectionId},  message.Offset: {message.Offset},message.Count{message.Count}bitll{BitConverter.ToString(message.Array, message.Offset, message.Count)} @ {channel})");
+        //if((message.Count - message.Offset) > sizeof(Int32)) return; 
+        //if(BitConverter.ToInt32(message.Array, message.Offset) < message.Count - message.Offset)  return;
+        //num++;
+        //string assetpath = Application.dataPath + "/../test/" + num + ".png";
+
+
+        if ((message.Count - message.Offset) < sizeof(Int32)) return;
+        if (message.Count - message.Offset < BitConverter.ToInt32(message.Array, message.Offset)) return;
+        byte[] bytes = new byte[message.Count - message.Offset - sizeof(Int32)];
+        Array.Copy(message.Array, message.Offset + sizeof(Int32), bytes, 0, message.Count - message.Offset - sizeof(Int32));
+        MsgBase reMsgbase = msg.Decode(bytes);
+       
+        taskQueue.Enqueue(reMsgbase);
+        
+    }
+    public delegate void MsgListener(MsgBase msgBase);
+    public static Dictionary<string, MsgListener> msgListeners = new Dictionary<string, MsgListener>();
+    public  void AddMsgListener(string msgName, MsgListener listener) {
+
+        if (msgListeners.ContainsKey(msgName)) {
+            msgListeners[msgName] += listener;
+        }
+
+        else {
+            msgListeners[msgName] = listener;
+        }
+    }
+
+    public void RemoveMsgListener(string msgName, MsgListener listener) {
+        if (msgListeners.ContainsKey(msgName)) {
+            msgListeners[msgName] -= listener;
+        }
+    }
+    private void FireMsg(string msgName, MsgBase msgBase) {
+        if (msgListeners.ContainsKey(msgName)) {
+            msgListeners[msgName](msgBase);
+        }
+    }
+    public void MsgUpdate() {
+        //初步判断，提升效率
+        if (msgCount == 0) {
+            return;
+        }
+        //重复处理消息
+        for (int i = 0; i < MAX_MESSAGE_FIRE; i++) {
+            //获取第一条消息
+            MsgBase msgBase = null;
+            lock (msgList) {
+                if (msgList.Count > 0) {
+                    msgBase = msgList[0];
+                    msgList.RemoveAt(0);
+                    msgCount--;
+                }
+            }
+            //分发消息
+            if (msgBase != null) {
+                FireMsg(msgBase.GetName(), msgBase);
+            }
+            //没有消息了
+            else {
+                break;
+            }
+        }
+    }
 }

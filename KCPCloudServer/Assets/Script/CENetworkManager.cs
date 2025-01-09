@@ -130,25 +130,18 @@ public class CENetworkManager : MonoBehaviour {
         //num++;
         //string assetpath = Application.dataPath + "/../test/" + num + ".png";
         new Task(() => {
-            //byte[] bytes = new byte[message.Count - message.Offset];
-            //Array.Copy(message.Array, message.Offset, bytes, 0, message.Count - message.Offset);
-            //File.WriteAllBytes(assetpath, bytes);
-            try {
-                if ((message.Count - message.Offset) < sizeof(Int32)) return;
-                if (message.Count - message.Offset < BitConverter.ToInt32(message.Array, message.Offset)) return;
-                byte[] bytes = new byte[message.Count - message.Offset - sizeof(Int32)];
-                Array.Copy(message.Array, message.Offset + sizeof(Int32), bytes, 0, message.Count - message.Offset - sizeof(Int32));
-                MsgBase reMsgbase = msg.Decode(bytes);
-                //HandleMsg(connectionId, reMsgbase);
-                TaskUnit taskUnit = new TaskUnit();
-                taskUnit.connectionId = connectionId;
-                taskUnit.msg = reMsgbase;
-                lock (taskQueue) {
-                    taskQueue.Enqueue(taskUnit);
-                }
-            }
-            catch (Exception e) {
-                Log.Info($"connectionId:{connectionId},e.Message:{e.Message}");
+
+            if ((message.Count - message.Offset) < sizeof(Int32)) return;
+            if (message.Count - message.Offset < BitConverter.ToInt32(message.Array, message.Offset)) return;
+            byte[] bytes = new byte[message.Count - message.Offset - sizeof(Int32)];
+            Array.Copy(message.Array, message.Offset + sizeof(Int32), bytes, 0, message.Count - message.Offset - sizeof(Int32));
+            MsgBase reMsgbase = msg.Decode(bytes);
+            //HandleMsg(connectionId, reMsgbase);
+            TaskUnit taskUnit = new TaskUnit();
+            taskUnit.connectionId = connectionId;
+            taskUnit.msg = reMsgbase;
+            lock (taskQueue) {
+                taskQueue.Enqueue(taskUnit);
             }
         }).Start();
     }
