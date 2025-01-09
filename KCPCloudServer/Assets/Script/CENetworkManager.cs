@@ -21,7 +21,7 @@ public class CENetworkManager : MonoBehaviour {
     public Texture2D tex;
     Queue<TaskUnit> taskQueue = new Queue<TaskUnit>();
 
-
+    Dictionary<Vector3, PointMessage> pointMessageDic = new Dictionary<Vector3, PointMessage>();
 
     private void Awake() {
         if (instance == null) {
@@ -41,26 +41,48 @@ public class CENetworkManager : MonoBehaviour {
 
     // Update is called once per frame
     void Update() {
-        server.Tick();
+        server.Tick();//kcp更新
 
         while (taskQueue.Count > 0) {
             TaskUnit taskUnit = taskQueue.Dequeue();
             PosMsg msg = (PosMsg)taskUnit.msg;
-            camm.transform.position = new Vector3(msg.x, msg.y, msg.z);
-            if (camm.RenderToCubemap(cubemap)) {
-                for (int i = 0; i < 6; i++) {
-                    tex.SetPixels(cubemap.GetPixels((CubemapFace)i), 0);
-                    tex.Apply();
-                    byte[] bytes = tex.EncodeToJPG();
-                    PointCubemapMsg pointCubemapMsg = new PointCubemapMsg();
-                    pointCubemapMsg.x = msg.x;
-                    pointCubemapMsg.y = msg.y;
-                    pointCubemapMsg.z = msg.z;
-                    pointCubemapMsg.face = i;
-                    pointCubemapMsg.jpg_bytes = bytes;
-                    Send(taskUnit.connectionId, pointCubemapMsg);
+            Vector3 pos = new Vector3(msg.x, msg.y, msg.z);
+            //检查是否已经有这个点的信息
+            if(pointMessageDic.ContainsKey(pos)) {
+                cubemap = pointMessageDic[pos].cubemap;
+            }
+            else {
+                camm.transform.position = pos;
+                if (camm.RenderToCubemap(cubemap)) {
+                    //缓存点信息
+                    PointMessage pointMessage = new PointMessage();
+                    pointMessage.cubemap = cubemap;
+                    pointMessage.pos = pos;
+                    pointMessageDic.Add(pos, pointMessage);
+                    //按照面发送 
+                }
+                else{
+                    cubemap = null;
+                    Log.Info("RenderToCubemap failed");
                 }
             }
+            if (cubemap == null) {
+                Log.Info("cubemap is null");
+                continue;
+            }
+            for (int i = 0; i < 6; i++) {
+                tex.SetPixels(cubemap.GetPixels((CubemapFace)i), 0);
+                tex.Apply();
+                byte[] bytes = tex.EncodeToJPG();
+                PointCubemapMsg pointCubemapMsg = new PointCubemapMsg();
+                pointCubemapMsg.x = msg.x;
+                pointCubemapMsg.y = msg.y;
+                pointCubemapMsg.z = msg.z;
+                pointCubemapMsg.face = i;
+                pointCubemapMsg.jpg_bytes = bytes;
+                Send(taskUnit.connectionId, pointCubemapMsg);
+            }
+
         }
 
     }
