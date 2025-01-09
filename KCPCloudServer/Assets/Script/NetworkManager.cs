@@ -7,10 +7,13 @@ using System.IO;
 using System.Threading;
 using UnityEngine;
 using System.Threading.Tasks;
+using System.Reflection;
 public class NetworkManager : MonoBehaviour
 {
     public static NetworkManager instance;
     public KcpServer server;
+    MsgBase msg = new MsgBase();
+
 
     private void Awake() {
         if (instance == null) {
@@ -82,8 +85,29 @@ public class NetworkManager : MonoBehaviour
 
             if ((message.Count - message.Offset) < sizeof(Int32)) return;
             if (message.Count - message.Offset < BitConverter.ToInt32(message.Array, message.Offset)) return;
-            
+            byte [] bytes = new byte[message.Count - message.Offset- sizeof(Int32)];
+            Array.Copy(message.Array, message.Offset + sizeof(Int32), bytes, 0, message.Count - message.Offset - sizeof(Int32));
+            MsgBase reMsgbase = msg.Decode(bytes);
+            HandleMsg(connectionId, reMsgbase);
         }).Start();
+    }
+    private void HandleMsg(int conn, MsgBase protoBase) {
+
+        string methodName = protoBase.GetName();
+
+
+        MethodInfo mm = Type.GetType("Handle").GetMethod(methodName);
+        if (mm == null) {
+            string str = "[警告]ConnHandleMsg没有处理连接方法 ";
+            Console.WriteLine(str + methodName);
+            return;
+        }
+        Action<int, MsgBase> updateDel = (Action<int, MsgBase>)Delegate.CreateDelegate(typeof(Action<int, MsgBase>), null, mm);
+
+        updateDel(conn, protoBase);
+        Log.Info("[处理连接消息]" + conn + " :" + methodName);
+
+
     }
 }
 

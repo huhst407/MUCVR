@@ -86,4 +86,5 @@ public class NetworkManager : MonoBehaviour
         }
         //client.Send(new ArraySegment<byte>(System.Text.Encoding.UTF8.GetBytes("hello")), KcpChannel.Reliable);
     }
+    
 }
