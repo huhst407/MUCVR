@@ -8,12 +8,22 @@ using System.Threading;
 using UnityEngine;
 using System.Threading.Tasks;
 using System.Reflection;
+using System.Linq;
+public class TaskUnit{
+    public int connectionId;
+    public MsgBase msg;
+}
+
 public class NetworkManager : MonoBehaviour
 {
     public static NetworkManager instance;
     public KcpServer server;
     MsgBase msg = new MsgBase();
-
+    Camera camm;
+    Cubemap cubemap;
+    const int width = 1024;
+    Texture2D tex=new Texture2D(width,width);
+    Queue<TaskUnit> taskQueue = new Queue<TaskUnit>();
 
     private void Awake() {
         if (instance == null) {
@@ -26,14 +36,35 @@ public class NetworkManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        camm = Camera.main;
         InitServer();
        
     }
 
     // Update is called once per frame
-    void Update()
-    {
+    void Update() {
         server.Tick();
+
+        while (taskQueue.Count > 0) {
+            TaskUnit taskUnit = taskQueue.Dequeue();
+            PosMsg msg = (PosMsg)taskUnit.msg;
+            camm.transform.position = new Vector3(msg.x, msg.y, msg.z);
+            if(camm.RenderToCubemap(cubemap)) {
+                for(int i=0;i<6;i++) {
+                    tex.SetPixels(cubemap.GetPixels((CubemapFace)i), 0);
+                    tex.Apply();
+                    byte[] bytes = tex.EncodeToJPG();
+                    PointCubemapMsg pointCubemapMsg = new PointCubemapMsg();
+                    pointCubemapMsg.x = msg.x;
+                    pointCubemapMsg.y = msg.y;
+                    pointCubemapMsg.z = msg.z;
+                    pointCubemapMsg.face = i;
+                    pointCubemapMsg.jpg_bytes = bytes;
+
+                }
+            }
+        }
+
     }
     private void InitServer() {
         KcpConfig config = new KcpConfig(
@@ -82,32 +113,47 @@ public class NetworkManager : MonoBehaviour
             //byte[] bytes = new byte[message.Count - message.Offset];
             //Array.Copy(message.Array, message.Offset, bytes, 0, message.Count - message.Offset);
             //File.WriteAllBytes(assetpath, bytes);
-
-            if ((message.Count - message.Offset) < sizeof(Int32)) return;
-            if (message.Count - message.Offset < BitConverter.ToInt32(message.Array, message.Offset)) return;
-            byte [] bytes = new byte[message.Count - message.Offset- sizeof(Int32)];
-            Array.Copy(message.Array, message.Offset + sizeof(Int32), bytes, 0, message.Count - message.Offset - sizeof(Int32));
-            MsgBase reMsgbase = msg.Decode(bytes);
-            HandleMsg(connectionId, reMsgbase);
+            try {
+                if ((message.Count - message.Offset) < sizeof(Int32)) return;
+                if (message.Count - message.Offset < BitConverter.ToInt32(message.Array, message.Offset)) return;
+                byte[] bytes = new byte[message.Count - message.Offset - sizeof(Int32)];
+                Array.Copy(message.Array, message.Offset + sizeof(Int32), bytes, 0, message.Count - message.Offset - sizeof(Int32));
+                MsgBase reMsgbase = msg.Decode(bytes);
+                //HandleMsg(connectionId, reMsgbase);
+                TaskUnit taskUnit = new TaskUnit();
+                taskUnit.connectionId = connectionId;
+                taskUnit.msg = reMsgbase;
+                lock (taskQueue) {
+                    taskQueue.Enqueue(taskUnit);
+                }
+            } catch (Exception e) {
+                Log.Info($"connectionId:{connectionId},e.Message:{e.Message}");
+            }
         }).Start();
     }
-    private void HandleMsg(int conn, MsgBase protoBase) {
-
-        string methodName = protoBase.GetName();
-
-
-        MethodInfo mm = Type.GetType("Handle").GetMethod(methodName);
-        if (mm == null) {
-            string str = "[警告]ConnHandleMsg没有处理连接方法 ";
-            Console.WriteLine(str + methodName);
-            return;
-        }
-        Action<int, MsgBase> updateDel = (Action<int, MsgBase>)Delegate.CreateDelegate(typeof(Action<int, MsgBase>), null, mm);
-
-        updateDel(conn, protoBase);
-        Log.Info("[处理连接消息]" + conn + " :" + methodName);
-
-
+    public void Send(int connectionId, MsgBase msg) {
+        byte[] bytes_context = msg.Encode();
+        Int32 length = bytes_context.Length;
+        byte[] length_bytes = BitConverter.GetBytes(length);
+        byte[] bytes = length_bytes.Concat(bytes_context).ToArray();
+        server.Send(connectionId,new ArraySegment<byte>( bytes), KcpChannel.Reliable);
+        
     }
+    //private void HandleMsg(int conn, MsgBase protoBase) {
+
+    //    string methodName = protoBase.GetName();
+    //    MethodInfo mm = Type.GetType("Handle").GetMethod(methodName);
+    //    if (mm == null) {
+    //        string str = "[警告]ConnHandleMsg没有处理连接方法 ";
+    //        Log.Info(str + methodName);
+    //        return;
+    //    }
+    //    Action<int, MsgBase> updateDel = (Action<int, MsgBase>)Delegate.CreateDelegate(typeof(Action<int, MsgBase>), null, mm);
+
+    //    updateDel(conn, protoBase);
+    //    Log.Info("[处理连接消息]" + conn + " :" + methodName);
+
+
+    //}
 }
 
