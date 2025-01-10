@@ -3,8 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 [Serializable]
-public class PosMsg : MsgBase
-{
+public class PosMsg : MsgBase {
     public PosMsg() { protoName = "PosMsg"; }
     public float x;
     public float y;
@@ -15,8 +14,7 @@ public class TaskUnit {
     public int connectionId;
     public MsgBase msg;
 }
-public class VecInt3
-{
+public class VecInt3 {
     public int x;
     public int y;
     public int z;

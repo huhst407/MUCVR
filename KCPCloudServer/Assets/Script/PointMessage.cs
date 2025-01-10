@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class PointMessage
 {
-    public Vector3 pos;
+    public VecInt3 pos;
     public Cubemap cubemap;
     static int width ;
     public bool[] isFace = new bool[6];
@@ -13,7 +13,7 @@ public class PointMessage
         cubemap = new Cubemap(width, TextureFormat.RGB24, false);
     }
     #region 接收
-    public void ResolveToPointMessage(Vector3 Coord, int CubeMapFace, Texture2D texture) {
+    public void ResolveToPointMessage(VecInt3 Coord, int CubeMapFace, Texture2D texture) {
         pos = Coord;
         cubemap.SetPixels(texture.GetPixels(), (CubemapFace)CubeMapFace);
         cubemap.Apply();

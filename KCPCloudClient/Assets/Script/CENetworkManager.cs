@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -13,10 +14,11 @@ public class CENetworkManager : MonoBehaviour
     public Cubemap cubemap;
     public int width = 1024;
     readonly static int MAX_MESSAGE_FIRE = 10;
-    static int msgCount = 0;
     public MsgBase msg = new MsgBase();
-    public Queue<MsgBase> taskQueue = new Queue<MsgBase>();
     static List<MsgBase> msgList = new List<MsgBase>();
+
+    
+
     private void Awake() {
         if (instance == null) {
             instance = this;
@@ -38,7 +40,8 @@ public class CENetworkManager : MonoBehaviour
     void Update()
     {
         client.Tick();
-        MsgUpdate();
+        if(client.connected)
+            MsgUpdate();
 
 
 
@@ -72,7 +75,7 @@ public class CENetworkManager : MonoBehaviour
         // create server
         client = new KcpClient(
             () => { },//连接时回调
-            (message, channel) => Log.Info($"[KCP] OnServerDataReceived({BitConverter.ToString(message.Array, message.Offset, message.Count)} @ {channel})"),//接收到数据时回调
+            (message, channel) => RecallReceived(message,channel),//接收到数据时回调
             () => { },//断开连接时回调
             ( error, reason) => Log.Info($"[KCP] OnServerError( {error}, {reason}"),
             config
@@ -98,22 +101,15 @@ public class CENetworkManager : MonoBehaviour
         //}
         ////client.Send(new ArraySegment<byte>(System.Text.Encoding.UTF8.GetBytes("hello")), KcpChannel.Reliable);
     }
-    void RecallReceived(int connectionId, ArraySegment<byte> message, KcpChannel channel) {
-        Log.Info($"[KCP] OnServerDataReceived({connectionId},  message.Offset: {message.Offset},message.Count{message.Count}bitll{BitConverter.ToString(message.Array, message.Offset, message.Count)} @ {channel})");
-        //if((message.Count - message.Offset) > sizeof(Int32)) return; 
-        //if(BitConverter.ToInt32(message.Array, message.Offset) < message.Count - message.Offset)  return;
-        //num++;
-        //string assetpath = Application.dataPath + "/../test/" + num + ".png";
-
+    void RecallReceived( ArraySegment<byte> message, KcpChannel channel) {
+        Log.Info($"[KCP] OnServerDataReceived(message.Offset: {message.Offset},message.Count{message.Count}bitll{BitConverter.ToString(message.Array, message.Offset, message.Count)} @ {channel})");
 
         if ((message.Count - message.Offset) < sizeof(Int32)) return;
         if (message.Count - message.Offset < BitConverter.ToInt32(message.Array, message.Offset)) return;
         byte[] bytes = new byte[message.Count - message.Offset - sizeof(Int32)];
         Array.Copy(message.Array, message.Offset + sizeof(Int32), bytes, 0, message.Count - message.Offset - sizeof(Int32));
         MsgBase reMsgbase = msg.Decode(bytes);
-       
-        taskQueue.Enqueue(reMsgbase);
-        
+        msgList.Add(reMsgbase); 
     }
     public delegate void MsgListener(MsgBase msgBase);
     public static Dictionary<string, MsgListener> msgListeners = new Dictionary<string, MsgListener>();
@@ -140,7 +136,7 @@ public class CENetworkManager : MonoBehaviour
     }
     public void MsgUpdate() {
         //初步判断，提升效率
-        if (msgCount == 0) {
+        if (msgList.Count == 0) {
             return;
         }
         //重复处理消息
@@ -151,7 +147,6 @@ public class CENetworkManager : MonoBehaviour
                 if (msgList.Count > 0) {
                     msgBase = msgList[0];
                     msgList.RemoveAt(0);
-                    msgCount--;
                 }
             }
             //分发消息
@@ -163,5 +158,13 @@ public class CENetworkManager : MonoBehaviour
                 break;
             }
         }
+    }
+    public void Send( MsgBase msg) {
+        byte[] bytes_context = msg.Encode();
+        Int32 length = bytes_context.Length;
+        byte[] length_bytes = BitConverter.GetBytes(length);
+        byte[] bytes = length_bytes.Concat(bytes_context).ToArray();
+        client.Send( new ArraySegment<byte>(bytes), KcpChannel.Reliable);
+
     }
 }

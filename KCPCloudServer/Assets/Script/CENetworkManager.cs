@@ -3,8 +3,6 @@ using Packages.Rider.Editor.Util;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
-using System.Threading;
 using UnityEngine;
 using System.Threading.Tasks;
 using System.Reflection;
@@ -21,7 +19,7 @@ public class CENetworkManager : MonoBehaviour {
     public Texture2D tex;
     Queue<TaskUnit> taskQueue = new Queue<TaskUnit>();
 
-    Dictionary<Vector3, PointMessage> pointMessageDic = new Dictionary<Vector3, PointMessage>();
+    Dictionary<VecInt3, PointMessage> pointMessageDic = new Dictionary<VecInt3, PointMessage>();
 
     private void Awake() {
         if (instance == null) {
@@ -46,13 +44,13 @@ public class CENetworkManager : MonoBehaviour {
         while (taskQueue.Count > 0) {
             TaskUnit taskUnit = taskQueue.Dequeue();
             PosMsg msg = (PosMsg)taskUnit.msg;
-            Vector3 pos = new Vector3(msg.x, msg.y, msg.z);
+            VecInt3 pos = new VecInt3((int)msg.x, (int)msg.y, (int)msg.z);
             //检查是否已经有这个点的信息
             if(pointMessageDic.ContainsKey(pos)) {
                 cubemap = pointMessageDic[pos].cubemap;
             }
             else {
-                camm.transform.position = pos;
+                camm.transform.position = new Vector3(pos.x,pos.y,pos.z);
                 if (camm.RenderToCubemap(cubemap)) {
                     //缓存点信息
                     PointMessage pointMessage = new PointMessage();
@@ -75,9 +73,9 @@ public class CENetworkManager : MonoBehaviour {
                 tex.Apply();
                 byte[] bytes = tex.EncodeToJPG();
                 PointCubemapMsg pointCubemapMsg = new PointCubemapMsg();
-                pointCubemapMsg.x = msg.x;
-                pointCubemapMsg.y = msg.y;
-                pointCubemapMsg.z = msg.z;
+                pointCubemapMsg.x = pos.x;
+                pointCubemapMsg.y = pos.y;
+                pointCubemapMsg.z = pos.z;
                 pointCubemapMsg.face = i;
                 pointCubemapMsg.jpg_bytes = bytes;
                 Send(taskUnit.connectionId, pointCubemapMsg);
