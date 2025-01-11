@@ -1,4 +1,5 @@
 ﻿using kcp2k;
+using Sirenix.OdinInspector;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -6,6 +7,7 @@ using UnityEngine.Android;
 
 public class UpdatePanorama : MonoBehaviour
 {
+    [ShowInInspector]
     public Dictionary<VecInt3, PointMessage> pointmessages = new Dictionary<VecInt3, PointMessage>();
     public Texture2D tex;
     public Camera camm;

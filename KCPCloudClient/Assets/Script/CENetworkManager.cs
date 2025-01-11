@@ -16,7 +16,7 @@ public class CENetworkManager : MonoBehaviour
     readonly static int MAX_MESSAGE_FIRE = 10;
     public MsgBase msg = new MsgBase();
     [ShowInInspector]
-    static List<MsgBase> msgList = new List<MsgBase>();
+    public static List<MsgBase> msgList = new List<MsgBase>();
     public float updateInterval = 5f;
 
 
@@ -112,8 +112,8 @@ public class CENetworkManager : MonoBehaviour
 
         if ((message.Count - message.Offset) < sizeof(Int32)) return;
         if (message.Count - message.Offset < BitConverter.ToInt32(message.Array, message.Offset)) return;
-        byte[] bytes = new byte[message.Count - message.Offset - sizeof(Int32)];
-        Array.Copy(message.Array, message.Offset + sizeof(Int32), bytes, 0, message.Count - message.Offset - sizeof(Int32));
+        byte[] bytes = new byte[message.Count - sizeof(Int32)];
+        Array.Copy(message.Array, message.Offset + sizeof(Int32), bytes, 0, message.Count - sizeof(Int32));
        
         //Log.Info(System.Text.Encoding.UTF8.GetString(bytes));
         MsgBase reMsgbase = msg.Decode(bytes);
