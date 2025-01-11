@@ -14,6 +14,7 @@ public class TaskUnit {
     public int connectionId;
     public MsgBase msg;
 }
+[Serializable]
 public class VecInt3 {
     public int x;
     public int y;

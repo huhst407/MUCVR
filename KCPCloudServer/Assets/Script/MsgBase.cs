@@ -1,6 +1,8 @@
-﻿using Newtonsoft.Json;
+﻿using kcp2k;
+using Newtonsoft.Json;
 using System;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security.Principal;
 public class MsgBase {
     public string protoName = "null";
@@ -32,11 +34,11 @@ public class MsgBase {
         if (allBytes.Length < start + sizeof(Int32))
             return "";
         Int32 length = BitConverter.ToInt32(allBytes, start);
+
         if (allBytes.Length < start + sizeof(Int32) + length)
             return "";
-
-
         string str = System.Text.Encoding.UTF8.GetString(allBytes, start + sizeof(Int32), length);
+
 
         end = start + sizeof(Int32) + length; ;
         return str;

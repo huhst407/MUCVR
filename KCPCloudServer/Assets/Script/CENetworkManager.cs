@@ -17,9 +17,10 @@ public class CENetworkManager : MonoBehaviour {
     Cubemap cubemap; 
     public int width = 1024;
     public Texture2D tex;
-    Queue<TaskUnit> taskQueue = new Queue<TaskUnit>();
+    public Queue<TaskUnit> taskQueue = new Queue<TaskUnit>();
 
     Dictionary<VecInt3, PointMessage> pointMessageDic = new Dictionary<VecInt3, PointMessage>();
+
 
     private void Awake() {
         if (instance == null) {
@@ -31,6 +32,7 @@ public class CENetworkManager : MonoBehaviour {
     }
     // Start is called before the first frame update
     void Start() {
+        cubemap = new Cubemap(width, TextureFormat.RGB24, false);
         tex = new Texture2D(width, width);
         camm = Camera.main;
         InitServer();
@@ -131,8 +133,9 @@ public class CENetworkManager : MonoBehaviour {
 
             if ((message.Count - message.Offset) < sizeof(Int32)) return;
             if (message.Count - message.Offset < BitConverter.ToInt32(message.Array, message.Offset)) return;
-            byte[] bytes = new byte[message.Count - message.Offset - sizeof(Int32)];
-            Array.Copy(message.Array, message.Offset + sizeof(Int32), bytes, 0, message.Count - message.Offset - sizeof(Int32));
+            byte[] bytes = new byte[message.Count - sizeof(Int32)];
+            Array.Copy(message.Array, message.Offset + sizeof(Int32), bytes, 0, message.Count - sizeof(Int32));
+
             MsgBase reMsgbase = msg.Decode(bytes);
             //HandleMsg(connectionId, reMsgbase);
             TaskUnit taskUnit = new TaskUnit();

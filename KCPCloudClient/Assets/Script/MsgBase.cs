@@ -1,12 +1,15 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Security.Principal;
+using UnityEngine;
 public class MsgBase {
     public string protoName = "null";
     public MsgBase() { }
     public virtual byte[] Encode() {
         byte[] name_bytes = AddString(protoName);
+        //UnityEngine.Debug.Log(JsonConvert.SerializeObject(this)); 
         byte[] context_bytes = AddString(JsonConvert.SerializeObject(this));
         return name_bytes.Concat(context_bytes).ToArray();
     }
@@ -14,6 +17,7 @@ public class MsgBase {
 
         protoName = GetString(allBytes, start, ref start);
         string json = GetString(allBytes, start, ref start);
+        
         return (MsgBase)JsonConvert.DeserializeObject(json, Type.GetType(protoName));
 
     }
@@ -37,7 +41,7 @@ public class MsgBase {
 
 
         string str = System.Text.Encoding.UTF8.GetString(allBytes, start + sizeof(Int32), length);
-
+        
         end = start + sizeof(Int32) + length; ;
         return str;
     }

@@ -16,8 +16,11 @@ public class CENetworkManager : MonoBehaviour
     readonly static int MAX_MESSAGE_FIRE = 10;
     public MsgBase msg = new MsgBase();
     static List<MsgBase> msgList = new List<MsgBase>();
+    public float updateInterval = 5f;
 
-    
+
+
+    float updatetime = 0;
 
     private void Awake() {
         if (instance == null) {
@@ -42,7 +45,9 @@ public class CENetworkManager : MonoBehaviour
         client.Tick();
         if(client.connected)
             MsgUpdate();
-
+        if (updatetime > 0) {
+            updatetime -= Time.deltaTime;
+        }
 
 
     }
@@ -108,6 +113,8 @@ public class CENetworkManager : MonoBehaviour
         if (message.Count - message.Offset < BitConverter.ToInt32(message.Array, message.Offset)) return;
         byte[] bytes = new byte[message.Count - message.Offset - sizeof(Int32)];
         Array.Copy(message.Array, message.Offset + sizeof(Int32), bytes, 0, message.Count - message.Offset - sizeof(Int32));
+       
+        //Log.Info(System.Text.Encoding.UTF8.GetString(bytes));
         MsgBase reMsgbase = msg.Decode(bytes);
         msgList.Add(reMsgbase); 
     }
@@ -160,11 +167,12 @@ public class CENetworkManager : MonoBehaviour
         }
     }
     public void Send( MsgBase msg) {
+        if (updatetime>0) return;
         byte[] bytes_context = msg.Encode();
         Int32 length = bytes_context.Length;
         byte[] length_bytes = BitConverter.GetBytes(length);
         byte[] bytes = length_bytes.Concat(bytes_context).ToArray();
         client.Send( new ArraySegment<byte>(bytes), KcpChannel.Reliable);
-
+        updatetime = updateInterval;
     }
 }
