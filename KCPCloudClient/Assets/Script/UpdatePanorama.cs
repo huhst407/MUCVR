@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using kcp2k;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Android;
@@ -21,6 +22,7 @@ public class UpdatePanorama : MonoBehaviour
     }
 
     private void OnPointCubemapMsg(MsgBase msgBase) {
+        Log.Info("OnPointCubemapMsg");
         PointCubemapMsg msg = (PointCubemapMsg)msgBase;
         VecInt3 pos = new VecInt3(msg.x, msg.y, msg.z);
         if (!pointmessages.ContainsKey(pos)) {

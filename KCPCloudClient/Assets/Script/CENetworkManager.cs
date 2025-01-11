@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
-
+using Sirenix.OdinInspector;
 public class CENetworkManager : MonoBehaviour
 {
     public static CENetworkManager instance;
@@ -15,6 +15,7 @@ public class CENetworkManager : MonoBehaviour
     public int width = 1024;
     readonly static int MAX_MESSAGE_FIRE = 10;
     public MsgBase msg = new MsgBase();
+    [ShowInInspector]
     static List<MsgBase> msgList = new List<MsgBase>();
     public float updateInterval = 5f;
 
