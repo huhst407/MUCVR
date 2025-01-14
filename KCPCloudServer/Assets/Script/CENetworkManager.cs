@@ -121,7 +121,7 @@ public class CENetworkManager : MonoBehaviour {
             config
         );
 
-        server.Start(7777);
+        server.Start(7776);
     }
     void RecallReceived(int connectionId, ArraySegment<byte> message, KcpChannel channel) {
         Log.Info($"[KCP] OnServerDataReceived({connectionId},  message.Offset: {message.Offset},message.Count{message.Count}bitll{BitConverter.ToString(message.Array, message.Offset, message.Count)} @ {channel})");

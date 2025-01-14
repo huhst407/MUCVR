@@ -37,7 +37,7 @@ public class CENetworkManager : MonoBehaviour
         camm = Camera.main;
         cubemap = new Cubemap(1024, TextureFormat.RGB24, false);
         InitClient();
-        client.Connect("127.0.0.1", 7777);
+        client.Connect("127.0.0.1", 7776);
     }
 
     // Update is called once per frame
