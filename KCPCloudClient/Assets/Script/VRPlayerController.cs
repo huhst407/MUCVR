@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
+using Valve.VR;
 
 [System.Obsolete]
 public class VRPlayerController : NetworkBehaviour {
@@ -14,6 +15,8 @@ public class VRPlayerController : NetworkBehaviour {
     {
         if (!isLocalPlayer) {
             transform.Find("Camera").gameObject.SetActive(false);
+            transform.Find("right_hand").GetComponent<SteamVR_Behaviour_Skeleton>().enabled = false;
+            transform.Find("left_hand").GetComponent<SteamVR_Behaviour_Skeleton>().enabled = false;
         }
     }
 
