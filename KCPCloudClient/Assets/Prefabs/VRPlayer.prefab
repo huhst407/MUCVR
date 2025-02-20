@@ -286,6 +286,7 @@ GameObject:
   - component: {fileID: 4742117838297509809}
   - component: {fileID: 4742117838291689506}
   - component: {fileID: 4742117838291689505}
+  - component: {fileID: 1600289616}
   m_Layer: 0
   m_Name: VRPlayer
   m_TagString: Untagged
@@ -439,6 +440,18 @@ MonoBehaviour:
     i15: 0
   m_ServerOnly: 0
   m_LocalPlayerAuthority: 1
+--- !u!114 &1600289616
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4742117838291557875}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d607c93690d7d24885ff0a94a9e0445, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &4742117838291558095
 GameObject:
   m_ObjectHideFlags: 0
