@@ -6,15 +6,15 @@ using UnityEngine.Networking;
 [System.Obsolete]
 public class VRPlayerController : NetworkBehaviour {
     private void Awake() {
-        if(!isLocalPlayer) {
-            transform.Find("Camera").gameObject.SetActive(false);
-        }
+
 
     }
     // Start is called before the first frame update
     void Start()
     {
-       
+        if (!isLocalPlayer) {
+            transform.Find("Camera").gameObject.SetActive(false);
+        }
     }
 
     // Update is called once per frame
