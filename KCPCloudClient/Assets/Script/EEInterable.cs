@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+[RequireComponent(typeof(Rigidbody))]
 public class EEInterable : MonoBehaviour
 {
     public SkinnedMeshRenderer[] existingSkinnedRenderers;
@@ -140,6 +140,17 @@ public class EEInterable : MonoBehaviour
             }
             else if (highlightRenderer != null)
                 highlightRenderer.enabled = false;
+        }
+    }
+    private void OnTriggerStay(Collider other) {
+        if (other.gameObject.CompareTag("Hand")) {
+            isHovering = true;
+        }
+
+    }
+    private void OnTriggerExit(Collider other) {
+        if (other.gameObject.CompareTag("Hand")) {
+            isHovering = false;
         }
     }
 }
