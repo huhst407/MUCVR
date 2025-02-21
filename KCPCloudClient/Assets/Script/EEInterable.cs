@@ -149,6 +149,7 @@ public class EEInterable : MonoBehaviour
                 highlightRenderer.enabled = false;
         }
     }
+   
     private void OnTriggerStay(Collider other) {
         if (other.gameObject.CompareTag("Hand")) {
             isHovering = true; 
@@ -156,15 +157,23 @@ public class EEInterable : MonoBehaviour
                 //if (skeletonAction.(skeletonAction.inputSource)) {
                 //    attachedToHand = !attachedToHand;
                 //}
-                if(booleanAction.GetState(skeletonAction.inputSource)) {
+                if (booleanAction.GetState(skeletonAction.inputSource)) {
                     print("1111111111111");
                 }
             }
+            else {
+                if( other.gameObject.TryGetComponent<SteamVR_Behaviour_Skeleton>(out skeletonAction))
+                {
+                    skeletonAction = other.gameObject.GetComponent<SteamVR_Behaviour_Skeleton>();
+                }
+            }
+            
         }
 
     }
     private void OnTriggerExit(Collider other) {
         if (other.gameObject.CompareTag("Hand")) {
+            skeletonAction = null;
             isHovering = false;
             attachedToHand = false;
         }
