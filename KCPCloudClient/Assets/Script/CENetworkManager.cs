@@ -19,8 +19,10 @@ public class CENetworkManager : MonoBehaviour
     public static List<MsgBase> msgList = new List<MsgBase>();
     public float updateInterval = 5f;
 
-
-
+    public float thresholdDistance = 500;
+    //todo:
+    //将以camera为中心，threshold为半径的球形碰撞区域内的所有物体加入到一个列表中，同时设置为未激活状态
+    //但物体移除时激活物体
     float updatetime = 0;
 
     private void Awake() {
@@ -31,6 +33,7 @@ public class CENetworkManager : MonoBehaviour
             Destroy(this);
         }
     }
+    
     // Start is called before the first frame update
     void Start()
     {
