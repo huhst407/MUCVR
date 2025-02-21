@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Valve.VR;
+using Valve.VR.InteractionSystem;
 [RequireComponent(typeof(Rigidbody))]
 public class EEInterable : MonoBehaviour
 {
@@ -14,6 +16,11 @@ public class EEInterable : MonoBehaviour
     public bool attachedToHand;
     public bool isHovering;
     public GameObject[] hideHighlight;
+
+    public SteamVR_Behaviour_Skeleton skeletonAction;
+    public SteamVR_Action_Boolean booleanAction;
+
+
     // Start is called before the first frame update
     void Start()
     {
@@ -144,13 +151,22 @@ public class EEInterable : MonoBehaviour
     }
     private void OnTriggerStay(Collider other) {
         if (other.gameObject.CompareTag("Hand")) {
-            isHovering = true;
+            isHovering = true; 
+            if (skeletonAction != null) {
+                //if (skeletonAction.(skeletonAction.inputSource)) {
+                //    attachedToHand = !attachedToHand;
+                //}
+                if(booleanAction.GetState(skeletonAction.inputSource)) {
+                    print("1111111111111");
+                }
+            }
         }
 
     }
     private void OnTriggerExit(Collider other) {
         if (other.gameObject.CompareTag("Hand")) {
             isHovering = false;
+            attachedToHand = false;
         }
     }
 }

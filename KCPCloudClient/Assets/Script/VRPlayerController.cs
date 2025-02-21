@@ -6,11 +6,13 @@ using Valve.VR;
 
 [System.Obsolete]
 public class VRPlayerController : NetworkBehaviour {
-    
-   
+
+    public GameObject lefHandAttached;
+    public GameObject rightHandAttached;
+
     private void Awake() {
 
-
+       
     }
     // Start is called before the first frame update
     void Start()
@@ -21,6 +23,6 @@ public class VRPlayerController : NetworkBehaviour {
             transform.Find("left_hand").GetComponent<SteamVR_Behaviour_Skeleton>().enabled = false;
         }
     }
-
+    
 
 }
