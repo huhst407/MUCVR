@@ -157,8 +157,13 @@ public class EEInterable : MonoBehaviour
                 //if (skeletonAction.(skeletonAction.inputSource)) {
                 //    attachedToHand = !attachedToHand;
                 //}
-                if (booleanAction.GetState(skeletonAction.inputSource)) {
-                    print("1111111111111");
+                if (booleanAction.GetStateDown(skeletonAction.inputSource)) {
+                    attachedToHand = true;
+                    this.transform.parent= other.gameObject.transform;
+                }
+                else if (booleanAction.GetStateUp(skeletonAction.inputSource)) {
+                    attachedToHand = false;
+                    this.transform.parent = null;
                 }
             }
             else {
