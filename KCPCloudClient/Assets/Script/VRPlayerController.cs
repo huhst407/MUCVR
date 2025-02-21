@@ -6,6 +6,8 @@ using Valve.VR;
 
 [System.Obsolete]
 public class VRPlayerController : NetworkBehaviour {
+    
+   
     private void Awake() {
 
 
@@ -20,9 +22,5 @@ public class VRPlayerController : NetworkBehaviour {
         }
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+
 }
