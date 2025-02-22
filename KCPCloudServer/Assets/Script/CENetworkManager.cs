@@ -53,7 +53,11 @@ public class CENetworkManager : MonoBehaviour {
             }
             else {
                 camm.transform.position = new Vector3(pos.x,pos.y,pos.z);
+
+                TestLog.Log("开始渲染前："+DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
                 if (camm.RenderToCubemap(cubemap)) {
+                    TestLog.Log("渲染结束后：" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+
                     //缓存点信息
                     PointMessage pointMessage = new PointMessage();
                     pointMessage.cubemap = cubemap;
@@ -70,6 +74,8 @@ public class CENetworkManager : MonoBehaviour {
                 Log.Info("cubemap is null");
                 continue;
             }
+            TestLog.Log("开始发送前："+DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+
             for (int i = 0; i < 6; i++) {
                 tex.SetPixels(cubemap.GetPixels((CubemapFace)i), 0);
                 tex.Apply();
@@ -82,6 +88,8 @@ public class CENetworkManager : MonoBehaviour {
                 pointCubemapMsg.jpg_bytes = bytes;
                 Send(taskUnit.connectionId, pointCubemapMsg);
             }
+            TestLog.Log("结束发送后：" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+
 
         }
 
