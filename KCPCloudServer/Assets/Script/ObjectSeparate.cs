@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class ObjectSeparate : MonoBehaviour
 {
+    //云端服务器
 
     private void OnTriggerEnter(Collider other) {
         MeshRenderer meshRenderer;
