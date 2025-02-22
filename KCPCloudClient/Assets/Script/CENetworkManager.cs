@@ -20,6 +20,8 @@ public class CENetworkManager : MonoBehaviour
     public float updateInterval = 5f;
 
     public float thresholdDistance = 500;
+
+    public SphereCollider sphereCollider;
     //todo:
     //将以camera为中心，threshold为半径的球形碰撞区域内的所有物体加入到一个列表中，同时设置为未激活状态
     //但物体移除时激活物体
@@ -31,6 +33,9 @@ public class CENetworkManager : MonoBehaviour
         }
         else {
             Destroy(this);
+        }
+        if(sphereCollider!= null) {
+            sphereCollider.radius = thresholdDistance;
         }
     }
     
